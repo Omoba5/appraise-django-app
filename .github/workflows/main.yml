@@ -13,7 +13,7 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Transfer codebase to EC2 instance
+      - name: Transfer codebase to Droplet
         uses: burnett01/rsync-deployments@7.0.1
         with:
           switches: -av --delete
