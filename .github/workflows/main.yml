@@ -1,40 +1,38 @@
-name: "PythonCodeValidator"
+name: Deploy Django App
 
-on: [push, pull_request]
+on:
+  push:
+    branches:
+      - main
 
 jobs:
-  formatting:
+  deploy:
     runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        python-version: [3.9]
 
     steps:
-      - uses: actions/checkout@v4
-      - name: Set up Python ${{ matrix.python-version }}
-        uses: actions/setup-python@v4
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Transfer codebase to EC2 instance
+        uses: burnett01/rsync-deployments@7.0.1
         with:
-          python-version: ${{ matrix.python-version }}
-      - name: Install requirements
-        run: |
-          pip install -r requirements-dev.txt
-          # a workaround to suppress pip errors about incompatible package versions
-          pip install astroid==2.9.1
-        continue-on-error: true
-      - name: Python information
-        run: |
-          set -e
-          python3 --version
-          pip freeze
-      - name: Check formatting
-        run: make check-black
-        continue-on-error: true
-      - name: Check pylint
-        run: make check-pylint
-        continue-on-error: true
-      - name: Check mypy
-        run: make check-mypy
-        continue-on-error: true
-      - name: Check safety
-        run: make check-safety
-        continue-on-error: true
+          switches: -av --delete
+          path: './'
+          remote_path: '/home/ubuntu/appraise-django-app'
+          remote_host: ${{ secrets.SERVER_IP }}
+          remote_user: ${{ secrets.SERVER_USER }}
+          remote_key: ${{ secrets.SERVER_KEY }}
+
+      - name: Restart Gunicorn service
+        id: restart_gunicorn
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.SERVER_IP }}
+          username: ${{ secrets.SERVER_USER }}
+          key: ${{ secrets.SERVER_KEY }}
+          port: 22
+          script: |
+            cd /home/ubuntu/appraise-django-app/
+            /home/ubuntu/appraise-django-app/venv/bin/pip install -q -r requirements.txt
+            sudo systemctl restart gunicorn
+            touch ~/CICD_did_this
