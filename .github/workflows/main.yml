@@ -3,7 +3,7 @@ name: Deploy Django App
 on:
   push:
     branches:
-      - main
+      - mainnnn
 
 jobs:
   deploy:
@@ -16,7 +16,7 @@ jobs:
       - name: Transfer codebase to Droplet
         uses: burnett01/rsync-deployments@7.0.1
         with:
-          switches: -av --delete
+          switches: -av --delete  --exclude='venv'
           path: './'
           remote_path: '/home/ubuntu/appraise-django-app'
           remote_host: ${{ secrets.SERVER_IP }}

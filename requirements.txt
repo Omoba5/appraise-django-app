@@ -3,6 +3,7 @@ django==4.1
 django-stubs
 lxml
 psycopg2-binary
+gunicorn==23.0.0
 tablib
 scipy
 whitenoise[brotli]
